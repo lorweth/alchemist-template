@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  api:
+    container_name: ${PROJECT_NAME}-api-dev
+    image: ${PROJECT_NAME}-go-dev:latest
+    volumes:
+      - .:/${PROJECT_NAME}
+    networks:
+      - local-network
+
+  pg:
+    container_name: ${PROJECT_NAME}-pg
+    image: postgres:11-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - local-network
+
+  pg-migrate:
+    container_name: ${PROJECT_NAME}-pg-migrate
+    image: migrate/migrate:v4.15.1
+    restart: "no"
+    depends_on:
+      pg:
+        condition: service_healthy
+    entrypoint: [""]
+    volumes:
+      - ./data/migrations:/migrations
+    networks:
+      - local-network
+
+  collector:
+    container_name: ${PROJECT_NAME}-collector
+    hostname: collector
+    image: otel/opentelemetry-collector-contrib:0.60.0 # otel/opentelemetry-collector:0.87.0
+    command: ["--config=/etc/otel-config.yml"]
+    volumes:
+      - ./configs/otel/otel-config.yml:/etc/otel-config.yml
+    networks:
+      - local-network
+
+  jaeger:
+    container_name: ${PROJECT_NAME}-jaeger
+    platform: linux/arm64/v8
+    hostname: jaeger
+    image: jaegertracing/all-in-one:latest
+    networks:
+      - local-network
+
+  prometheus:
+    container_name: ${PROJECT_NAME}-prometheus
+    platform: linux/arm64/v8
+    hostname: prometheus
+    image: prom/prometheus:v2.37.1
+    command: ["--config.file=/etc/prometheus/prometheus-config.yml"]
+    volumes:
+      - ./configs/prometheus/prometheus-config.yml:/etc/prometheus/prometheus-config.yml
+    networks:
+      - local-network
+
+  grafana:
+    container_name: ${PROJECT_NAME}-grafana
+    platform: linux/arm64/v8
+    hostname: grafana
+    image: grafana/grafana:9.0.9
+    volumes:
+      - ./configs/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./configs/grafana/provisioning/:/etc/grafana/provisioning/
+    networks:
+      - local-network
+
+networks:
+  local-network:
+    name: ${PROJECT_NAME}-network
