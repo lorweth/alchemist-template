@@ -62,6 +62,7 @@ func run() error {
 
 	m.Waiter().Add(
 		m.WaitForWeb,
+		m.WaitForDownloadSigningKeys,
 	)
 
 	//go func() {

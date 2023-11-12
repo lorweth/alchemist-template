@@ -1,7 +1,6 @@
 # Variables
-
-# Replace it with your project name
-export PROJECT_NAME = alchemist-template
+include .env.dev
+export
 
 DOCKER_COMPOSE = docker-compose --file build/docker-compose.base.yml --file build/docker-compose.dev.yml --project-directory . --project-name ${PROJECT_NAME}
 DOCKER = docker
