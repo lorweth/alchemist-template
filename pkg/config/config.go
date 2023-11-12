@@ -31,11 +31,18 @@ type OtelConfig struct {
 	ExporterEndpoint string
 }
 
+// IAMConfig representing an identity configuration
+type IAMConfig struct {
+	Domain   string
+	Audience string
+}
+
 // AppConfig representing an application configuration
 type AppConfig struct {
 	Environment     string
 	PG              PGConfig
 	Web             WebConfig
+	IAM             IAMConfig
 	Otel            OtelConfig
 	ShutdownTimeout time.Duration
 }
@@ -67,6 +74,16 @@ func ReadConfigFromEnv() (AppConfig, error) {
 		log.Print("open telemetry exporter endpoint have not been set")
 	}
 
+	iamDomain := strings.TrimSpace(os.Getenv("IAM_DOMAIN"))
+	if iamDomain == "" {
+		log.Print("iam domain have not been set")
+	}
+
+	iamAudience := strings.TrimSpace(os.Getenv("IAM_AUDIENCE"))
+	if iamAudience == "" {
+		log.Print("iam audience have not been set")
+	}
+
 	return AppConfig{
 		Environment: environment,
 		Web: WebConfig{
@@ -76,6 +93,10 @@ func ReadConfigFromEnv() (AppConfig, error) {
 		Otel: OtelConfig{
 			ServiceName:      otelServiceName,
 			ExporterEndpoint: otelExporterEndpoint,
+		},
+		IAM: IAMConfig{
+			Domain:   iamDomain,
+			Audience: iamAudience,
 		},
 		PG: PGConfig{
 			URI: pgURI,

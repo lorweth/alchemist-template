@@ -44,6 +44,7 @@ func run() (err error) {
 
 	s.Waiter().Add(
 		s.WaitForWeb,
+		s.PollingIAMSigningKeys,
 		//s.WaitForRPC,
 		//s.WaitForStream,
 	)

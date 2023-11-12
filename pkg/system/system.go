@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -18,6 +19,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/virsavik/alchemist-template/pkg/config"
+	"github.com/virsavik/alchemist-template/pkg/iam"
 	"github.com/virsavik/alchemist-template/pkg/logger"
 	"github.com/virsavik/alchemist-template/pkg/waiter"
 )
@@ -27,12 +29,13 @@ import (
 // as the central struct that encapsulates these essential elements for managing and
 // controlling the application's behavior.
 type System struct {
-	cfg    config.AppConfig
-	db     *sql.DB
-	mux    *chi.Mux
-	logger logger.Logger
-	waiter waiter.Waiter
-	tp     *sdktrace.TracerProvider
+	cfg          config.AppConfig
+	db           *sql.DB
+	mux          *chi.Mux
+	logger       logger.Logger
+	waiter       waiter.Waiter
+	tp           *sdktrace.TracerProvider
+	iamValidator iam.Validator
 }
 
 func New(cfg config.AppConfig) (*System, error) {
@@ -51,6 +54,10 @@ func New(cfg config.AppConfig) (*System, error) {
 	s.initLogger()
 
 	s.initMux()
+
+	if err := s.initIAMValidator(); err != nil {
+		return nil, err
+	}
 
 	return s, nil
 }
@@ -143,6 +150,25 @@ func (s *System) initOpenTelemetry() error {
 	return nil
 }
 
+func (s *System) initIAMValidator() error {
+	// Skip initialize iam validator if config not provided
+	if s.cfg.IAM.Domain == "" || s.cfg.IAM.Audience == "" {
+		return nil
+	}
+
+	var err error
+	s.iamValidator, err = iam.New(s.cfg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *System) IAMValidator() iam.Validator {
+	return s.iamValidator
+}
+
 func (s *System) initWaiter() {
 	s.waiter = waiter.New(waiter.CatchSignals())
 }
@@ -178,4 +204,10 @@ func (s *System) WaitForWeb(ctx context.Context) error {
 	})
 
 	return group.Wait()
+}
+
+func (s *System) WaitForDownloadSigningKeys(ctx context.Context) error {
+	s.iamValidator.PollingDownloadSigningKeys(ctx, 30*time.Second)
+
+	return nil
 }

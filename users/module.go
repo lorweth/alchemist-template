@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel"
 
 	"github.com/virsavik/alchemist-template/pkg/di"
-	"github.com/virsavik/alchemist-template/pkg/logger"
 	"github.com/virsavik/alchemist-template/pkg/postgresotel"
 	"github.com/virsavik/alchemist-template/pkg/rest/middleware"
 	"github.com/virsavik/alchemist-template/pkg/system"
@@ -50,7 +49,7 @@ func Root(ctx context.Context, svc system.Service) (err error) {
 	})
 
 	// setup Driver adapters
-	setupChiMiddleware(svc.Mux(), svc.Logger())
+	setupChiMiddleware(svc)
 
 	setupMetricRoute(svc.Mux())
 
@@ -59,10 +58,11 @@ func Root(ctx context.Context, svc system.Service) (err error) {
 	return nil
 }
 
-func setupChiMiddleware(mux *chi.Mux, logger logger.Logger) {
-	mux.Use(middleware.RequestID())
-	mux.Use(middleware.Logger(logger))
-	mux.Use(middleware.Otel(otel.Tracer("handler")))
+func setupChiMiddleware(svc system.Service) {
+	svc.Mux().Use(middleware.RequestID())
+	svc.Mux().Use(middleware.Logger(svc.Logger()))
+	svc.Mux().Use(middleware.Otel(otel.Tracer("handler")))
+	svc.Mux().Use(middleware.Auth(svc.Logger(), svc.IAMValidator()))
 }
 
 func setupMetricRoute(mux *chi.Mux) {
