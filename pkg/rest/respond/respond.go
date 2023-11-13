@@ -32,3 +32,11 @@ func BadRequest[T any](data T) Response[T] {
 		data:   data,
 	}
 }
+
+// Unauthorized creates a Unauthorized (401) Response
+func Unauthorized[T any](data T) Response[T] {
+	return Response[T]{
+		status: http.StatusUnauthorized,
+		data:   data,
+	}
+}

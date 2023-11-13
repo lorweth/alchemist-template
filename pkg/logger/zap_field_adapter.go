@@ -8,6 +8,18 @@ type field struct {
 	zapField zap.Field
 }
 
+func String(key string, value string) Field {
+	return field{
+		zapField: zap.String(key, value),
+	}
+}
+
+func Int(key string, value int) Field {
+	return field{
+		zapField: zap.Int(key, value),
+	}
+}
+
 func (f field) Equals(other Field) bool {
 	otherField, ok := other.(field)
 	if !ok {

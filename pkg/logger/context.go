@@ -10,7 +10,7 @@ const (
 	loggerCtxKey = "logger"
 )
 
-func NewCtx(ctx context.Context, l Logger) context.Context {
+func SetInCtx(ctx context.Context, l Logger) context.Context {
 	return context.WithValue(ctx, loggerCtxKey, l)
 }
 

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -152,7 +151,7 @@ func (s *System) initOpenTelemetry() error {
 
 func (s *System) initIAMValidator() error {
 	// Skip initialize iam validator if config not provided
-	if s.cfg.IAM.Domain == "" || s.cfg.IAM.Audience == "" {
+	if s.cfg.IAM.Tenant == "" || s.cfg.IAM.Audience == "" {
 		return nil
 	}
 
@@ -206,8 +205,6 @@ func (s *System) WaitForWeb(ctx context.Context) error {
 	return group.Wait()
 }
 
-func (s *System) WaitForDownloadSigningKeys(ctx context.Context) error {
-	s.iamValidator.PollingDownloadSigningKeys(ctx, 30*time.Second)
-
-	return nil
+func (s *System) WaitForValidator(ctx context.Context) error {
+	return s.IAMValidator().DownloadSigningKeysPolling(ctx)
 }

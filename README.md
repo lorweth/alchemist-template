@@ -3,8 +3,9 @@
 ## How to run
 
 1. Run `cat .env-example > .env.dev`
-2. Run `make setup`
-3. Run `make dev`
+2. Update your config at `.env.dev`
+3. Run `make setup`
+4. Run `make dev`
 
 ## Features
 
