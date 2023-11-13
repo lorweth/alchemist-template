@@ -10,7 +10,7 @@ services:
       PG_URL: postgres://${PROJECT_NAME}:@pg:5432/${PROJECT_NAME}?sslmode=disable
       OTEL_SERVICE_NAME: ${PROJECT_NAME}
       OTEL_EXPORTER_OTLP_ENDPOINT: "collector:4317"
-      IAM_DOMAIN: ${IAM_DOMAIN}
+      IAM_TENANT: ${IAM_TENANT}
       IAM_AUDIENCE: ${IAM_AUDIENCE}
 
   pg:

@@ -62,7 +62,7 @@ func setupChiMiddleware(svc system.Service) {
 	svc.Mux().Use(middleware.RequestID())
 	svc.Mux().Use(middleware.Logger(svc.Logger()))
 	svc.Mux().Use(middleware.Otel(otel.Tracer("handler")))
-	svc.Mux().Use(middleware.Auth(svc.Logger(), svc.IAMValidator()))
+	svc.Mux().Use(middleware.Auth(svc.IAMValidator()))
 }
 
 func setupMetricRoute(mux *chi.Mux) {

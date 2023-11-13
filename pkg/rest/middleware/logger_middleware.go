@@ -48,7 +48,7 @@ func Logger(l logger.Logger) func(next http.Handler) http.Handler {
 				reqLogger.Info("Served")
 			}()
 
-			next.ServeHTTP(ww, r.WithContext(logger.NewCtx(r.Context(), l)))
+			next.ServeHTTP(ww, r.WithContext(logger.SetInCtx(r.Context(), l)))
 		}
 
 		return http.HandlerFunc(fn)

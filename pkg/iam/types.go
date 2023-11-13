@@ -3,15 +3,14 @@ package iam
 import (
 	"context"
 	"crypto/rsa"
-	"time"
 )
 
 type Validator interface {
-	PollingDownloadSigningKeys(ctx context.Context, d time.Duration)
+	DownloadSigningKeysPolling(ctx context.Context) error
 
-	VerifyJWT(kid string) (*rsa.PublicKey, error)
+	GetSigningKey(kid string) (*rsa.PublicKey, error)
 
-	GetDomain() string
+	GetIssuer() string
 
 	GetAudience() string
 }
@@ -42,4 +41,8 @@ type jwk struct {
 
 type jwks struct {
 	Keys []jwk `json:"keys"`
+}
+
+type UserProfile struct {
+	ID string
 }

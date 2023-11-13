@@ -33,7 +33,7 @@ type OtelConfig struct {
 
 // IAMConfig representing an identity configuration
 type IAMConfig struct {
-	Domain   string
+	Tenant   string
 	Audience string
 }
 
@@ -74,8 +74,8 @@ func ReadConfigFromEnv() (AppConfig, error) {
 		log.Print("open telemetry exporter endpoint have not been set")
 	}
 
-	iamDomain := strings.TrimSpace(os.Getenv("IAM_DOMAIN"))
-	if iamDomain == "" {
+	iamTenant := strings.TrimSpace(os.Getenv("IAM_TENANT"))
+	if iamTenant == "" {
 		log.Print("iam domain have not been set")
 	}
 
@@ -95,7 +95,7 @@ func ReadConfigFromEnv() (AppConfig, error) {
 			ExporterEndpoint: otelExporterEndpoint,
 		},
 		IAM: IAMConfig{
-			Domain:   iamDomain,
+			Tenant:   iamTenant,
 			Audience: iamAudience,
 		},
 		PG: PGConfig{
