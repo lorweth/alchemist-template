@@ -19,6 +19,8 @@ type EnableUserResponse struct {
 // EnableUser set user status to active
 func (h Handler) EnableUser() http.HandlerFunc {
 	return rest.ErrResponseWrapper(func(w http.ResponseWriter, r *http.Request) error {
+		ctx := r.Context()
+
 		req, err := request.BindJSON[EnableUserRequest](r.Body)
 		if err != nil {
 			return err
@@ -28,8 +30,10 @@ func (h Handler) EnableUser() http.HandlerFunc {
 			return convertCtrlErr(err)
 		}
 
-		return respond.Ok(EnableUserResponse{
+		respond.Ok(EnableUserResponse{
 			Success: true,
-		}).WriteJSON(w)
+		}).WriteJSON(ctx, w)
+
+		return nil
 	})
 }

@@ -13,7 +13,7 @@ import (
 func ParseJWT(validator Validator, tokenRaw string) (*jwt.Token, error) {
 	// If the tokenRaw is empty
 	if tokenRaw == "" {
-		return nil, errTokenIsBlank
+		return nil, ErrTokenIsBlank
 	}
 
 	// Decode the JWT and grab the kid property from the header.
@@ -21,15 +21,15 @@ func ParseJWT(validator Validator, tokenRaw string) (*jwt.Token, error) {
 		// Ensure the JWT contains the expected audience, issuer, expiration, etc.
 		mapClaims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			return nil, errConvertToClaims
+			return nil, ErrConvertToClaims
 		}
 
 		if !mapClaims.VerifyAudience(validator.GetAudience(), true) {
-			return nil, errInvalidAudience
+			return nil, ErrInvalidAudience
 		}
 
 		if !mapClaims.VerifyIssuer(validator.GetIssuer(), true) {
-			return nil, errInvalidIssuer
+			return nil, ErrInvalidIssuer
 		}
 
 		// TODO: use alg HS256 for client JWT
@@ -39,7 +39,7 @@ func ParseJWT(validator Validator, tokenRaw string) (*jwt.Token, error) {
 
 		kid, exists := token.Header["kid"]
 		if !exists {
-			return nil, errKidNotFound
+			return nil, ErrKidNotFound
 		}
 
 		// Find the signature verification key in the filtered JWKS with a matching kid property.
@@ -54,12 +54,12 @@ func ParseJWT(validator Validator, tokenRaw string) (*jwt.Token, error) {
 
 	})
 	if err != nil {
-		return nil, fmt.Errorf("parse token error %w", err)
+		return nil, err
 	}
 
 	// Check if the parsed tokenRaw is valid...
 	if !parsedToken.Valid {
-		return nil, errTokenInvalid
+		return nil, ErrTokenInvalid
 	}
 
 	return parsedToken, nil

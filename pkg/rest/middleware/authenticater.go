@@ -8,11 +8,9 @@ import (
 	"github.com/virsavik/alchemist-template/pkg/iam"
 	"github.com/virsavik/alchemist-template/pkg/logger"
 	"github.com/virsavik/alchemist-template/pkg/rest/respond"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
-// Auth is a middleware function that handles JWT authentication using Auth0's RS256 and JWKS flow.
+// Authenticator is a middleware function that handles JWT authentication using Auth0's RS256 and JWKS flow.
 // It extracts the JWT token from the Authorization header, validates it using the provided IAM validator,
 // and sets the user profile information in the request context. If authentication fails, it responds with
 // an unauthorized status and an error message.
@@ -21,7 +19,7 @@ import (
 // extracted from the authenticated token.
 //
 // For more information on the RS256 and JWKS flow, refer to: https://auth0.com/blog/navigating-rs256-and-jwks/#Verifying-a-JWT-using-the-JWKS-endpoint
-func Auth(iamValidator iam.Validator) func(next http.Handler) http.Handler {
+func Authenticator(iamValidator iam.Validator) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -29,15 +27,11 @@ func Auth(iamValidator iam.Validator) func(next http.Handler) http.Handler {
 
 			p, err := getUserProfileFromRequest(r, iamValidator)
 			if err != nil {
-				log.Error(err, "authenticate error")
-				if writeErr := respond.Unauthorized(err).WriteJSON(w); writeErr != nil {
-					log.Error(writeErr, "write response error")
-				}
+				log.Infof("user authenticate error: %v", err)
+				respond.Unauthorized(respond.Message{Name: "invalid_token"}).WriteJSON(ctx, w)
+
 				return
 			}
-
-			// Enrich span attributes with user ID for tracing purposes
-			trace.SpanFromContext(ctx).SetAttributes(attribute.String("user_id", p.ID))
 
 			// Set user profile in the request context
 			ctx = iam.SetInCtx(r.Context(), p)

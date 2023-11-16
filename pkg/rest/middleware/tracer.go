@@ -4,12 +4,19 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
-// Otel is a middleware function that provides OpenTelemetry (OTel) tracing capabilities
+const (
+	scopeName = "github.com/virsavik/alchemist-template/pkg/rest/middleware/tracer"
+	version   = "1.0.0"
+)
+
+// OtelTracer is a middleware function that provides OpenTelemetry (OTel) tracing capabilities
 // for an HTTP server. It takes a trace.Tracer as a parameter, which allows you to
 // use an OTel-compatible tracer for tracing, and returns an HTTP middleware handler.
 //
@@ -25,17 +32,31 @@ import (
 //
 //	tracerProvider := otel.NewTracerProvider()
 //	tracer := tracerProvider.Tracer("my-service-name")
-//	http.Handle("/", Otel(tracer)(myHandler))
+//	http.Handle("/", OtelTracer(tracer)(myHandler))
 //	http.ListenAndServe(":8080", nil)
-func Otel(tracer trace.Tracer) func(next http.Handler) http.Handler {
+func OtelTracer() func(next http.Handler) http.Handler {
+	tp := otel.GetTracerProvider()
+	tracer := tp.Tracer(scopeName,
+		trace.WithInstrumentationVersion(version),
+	)
+	propagators := otel.GetTextMapPropagator()
+
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
+			ctx := propagators.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+
 			ctx, span := tracer.Start(
-				r.Context(),
-				"chi-route",
+				ctx,
+				"http.request",
 				trace.WithAttributes(
-					semconv.HTTPRouteKey.String(r.URL.Path),
-					semconv.HTTPMethod(r.Method),
+					semconv.HostName(r.Host),
+					semconv.URLPath(r.URL.Path),
+					semconv.URLQuery(r.URL.RawQuery),
+					semconv.HTTPRequestMethodOriginal(r.Method),
+					semconv.HTTPRequestBodySize(int(r.ContentLength)),
+					attribute.String("http.request.proto", r.Proto),
+					attribute.String("http.request.remote_address", r.RemoteAddr),
+					semconv.UserAgentOriginal(r.UserAgent()),
 				),
 				trace.WithSpanKind(trace.SpanKindServer),
 			)
@@ -47,7 +68,10 @@ func Otel(tracer trace.Tracer) func(next http.Handler) http.Handler {
 			next.ServeHTTP(ww, r.WithContext(ctx))
 
 			// Add the status code as an attribute to the span.
-			span.SetAttributes(attribute.Int("http.status_code", ww.Status()))
+			span.SetAttributes(
+				semconv.HTTPResponseStatusCode(ww.Status()),
+				semconv.HTTPResponseBodySize(ww.BytesWritten()),
+			)
 		}
 
 		return http.HandlerFunc(fn)

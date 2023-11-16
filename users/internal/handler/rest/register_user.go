@@ -35,9 +35,11 @@ func (h Handler) RegisterUser() http.HandlerFunc {
 			return convertCtrlErr(err)
 		}
 
-		return respond.Ok(RegisterUserResponse{
+		respond.Ok(RegisterUserResponse{
 			ID:    user.ID,
 			Email: user.Email,
-		}).WriteJSON(w)
+		}).WriteJSON(ctx, w)
+
+		return nil
 	})
 }

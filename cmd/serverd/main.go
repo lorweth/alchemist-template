@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 
@@ -45,13 +44,6 @@ func run() error {
 			// Add more module here
 		},
 	}
-
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			return
-		}
-	}(m.DB())
 
 	if err = m.startupModules(); err != nil {
 		return err

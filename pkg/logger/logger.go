@@ -6,15 +6,15 @@ import (
 	"go.uber.org/zap"
 )
 
-type LogConfig struct {
+type Config struct {
 	Environment string
 }
 
-type logger struct {
+type structuredLogger struct {
 	zap *zap.Logger
 }
 
-func New(cfg LogConfig) (Logger, error) {
+func New(cfg Config) (Logger, error) {
 	var zapLogger *zap.Logger
 	var err error
 
@@ -26,40 +26,57 @@ func New(cfg LogConfig) (Logger, error) {
 	}
 
 	if err != nil {
-		return &logger{
+		return &structuredLogger{
 			zap: zap.NewNop(),
 		}, nil
 	}
 
-	return &logger{
+	return &structuredLogger{
 		zap: zapLogger,
 	}, nil
-
 }
 
-func (l logger) Debug(msg string, args ...interface{}) {
-	l.zap.Debug(fmt.Sprintf(msg, args...))
+func (l structuredLogger) Debugf(format string, args ...interface{}) {
+	l.zap.Debug(fmt.Sprintf(format, args...))
 }
 
-func (l logger) Error(err error, desc string) {
-	l.zap.Error(fmt.Sprintf("%s %v", desc, err))
+func (l structuredLogger) Errorf(err error, format string, args ...interface{}) {
+	// Append otel exception keys
+	zapLogger := l.zap.With(
+		zap.String("exception.type", fmt.Sprintf("%T", err)),
+		zap.String("exception.message", err.Error()),
+	)
+
+	zapLogger.Error(fmt.Sprintf(format+" %+v", append(args, err)...))
 }
 
-func (l logger) Info(msg string, args ...interface{}) {
-	l.zap.Info(fmt.Sprintf(msg, args...))
+func (l structuredLogger) Infof(format string, args ...interface{}) {
+	l.zap.Info(fmt.Sprintf(format, args...))
 }
 
-func (l logger) Warn(msg string, args ...interface{}) {
-	l.zap.Warn(fmt.Sprintf(msg, args...))
+func (l structuredLogger) Warnf(format string, args ...interface{}) {
+	l.zap.Warn(fmt.Sprintf(format, args...))
 }
 
-func (l logger) With(fields ...Field) Logger {
+func (l structuredLogger) With(fields ...Field) Logger {
 	zapFields := make([]zap.Field, len(fields))
 	for idx, f := range fields {
 		zapFields[idx] = f.(field).Unwrap()
 	}
 
-	return &logger{
+	return &structuredLogger{
 		zap: l.zap.With(zapFields...),
+	}
+}
+
+func (l structuredLogger) Flush() error {
+	return l.zap.Sync()
+}
+
+func (l structuredLogger) clone() Logger {
+	zapCloned := *l.zap // Copy value of l.zap
+
+	return structuredLogger{
+		zap: &zapCloned,
 	}
 }

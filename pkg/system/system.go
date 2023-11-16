@@ -67,6 +67,13 @@ func (s *System) Config() config.AppConfig {
 
 func (s *System) initDB() (err error) {
 	s.db, err = sql.Open("pgx", s.cfg.PG.URI)
+
+	s.waiter.Cleanup(func() {
+		s.logger.Infof("close db connection")
+		if err := s.db.Close(); err != nil {
+			s.logger.Errorf(err, "close db connection error")
+		}
+	})
 	return err
 }
 
@@ -76,12 +83,19 @@ func (s *System) DB() *sql.DB {
 
 func (s *System) initLogger() {
 	var err error
-	s.logger, err = logger.New(logger.LogConfig{
+	s.logger, err = logger.New(logger.Config{
 		Environment: s.cfg.Environment,
 	})
 	if err != nil {
 		panic("init logger error")
 	}
+
+	s.waiter.Cleanup(func() {
+		s.logger.Infof("flush logger")
+		if err := s.logger.Flush(); err != nil {
+			s.logger.Errorf(err, "flush logger error")
+		}
+	})
 }
 
 func (s *System) Logger() logger.Logger {
@@ -142,7 +156,7 @@ func (s *System) initOpenTelemetry() error {
 
 	s.waiter.Cleanup(func() {
 		if err := s.tp.Shutdown(context.Background()); err != nil {
-			s.logger.Error(err, "ran into an issue shutting down the tracer provider")
+			s.logger.Errorf(err, "ran into an issue shutting down the tracer provider")
 		}
 	})
 
