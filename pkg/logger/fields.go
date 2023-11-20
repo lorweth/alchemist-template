@@ -1,14 +1,16 @@
 package logger
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+)
 
-func WithString(key string, value string) Field {
+func String(key string, value string) Field {
 	return field{
 		zapField: zap.String(key, value),
 	}
 }
 
-func WithInt(key string, value int) Field {
+func Int(key string, value int) Field {
 	return field{
 		zapField: zap.Int(key, value),
 	}

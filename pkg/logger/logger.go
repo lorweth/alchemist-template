@@ -1,7 +1,9 @@
 package logger
 
 import (
+	"errors"
 	"fmt"
+	"syscall"
 
 	"go.uber.org/zap"
 )
@@ -70,7 +72,14 @@ func (l structuredLogger) With(fields ...Field) Logger {
 }
 
 func (l structuredLogger) Flush() error {
-	return l.zap.Sync()
+	if err := l.zap.Sync(); err != nil {
+		// Ignore this stderr https://github.com/uber-go/zap/issues/328
+		if !errors.Is(err, syscall.ENOTTY) && !errors.Is(err, syscall.EINVAL) {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (l structuredLogger) clone() Logger {
