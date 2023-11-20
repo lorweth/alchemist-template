@@ -13,10 +13,12 @@ func newZapConfig(opts ...zapOption) zap.Config {
 			Initial:    100,
 			Thereafter: 100,
 		},
-		Encoding:         "json",
-		EncoderConfig:    newEncoderConfig(),
-		OutputPaths:      []string{"stderr"},
-		ErrorOutputPaths: []string{"stderr"},
+		Encoding:          "json",
+		EncoderConfig:     newEncoderConfig(),
+		OutputPaths:       []string{"stderr"},
+		ErrorOutputPaths:  []string{"stderr"},
+		DisableStacktrace: true,
+		DisableCaller:     false,
 	}
 
 	for _, opt := range opts {

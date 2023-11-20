@@ -6,15 +6,15 @@ import (
 )
 
 var (
-	errSigningKeySetEmpty = errors.New("the jwks endpoint did not contain any signature verification keys")
-	errPublicKeyNotFound  = errors.New("public key not found")
-	errTokenSubNotFound   = errors.New("token sub missing")
-	errConvertToClaims    = errors.New("cannot convert to map claims")
-	errTokenIsBlank       = errors.New("jwt raw is blank")
-	errInvalidAudience    = errors.New("invalid audience")
-	errInvalidIssuer      = errors.New("invalid issuer")
-	errKidNotFound        = errors.New("token header not contain kid")
-	errTokenInvalid       = errors.New("token invalid")
+	ErrSigningKeySetEmpty = errors.New("the jwks endpoint did not contain any signature verification keys")
+	ErrPublicKeyNotFound  = errors.New("public key not found")
+	ErrTokenSubNotFound   = errors.New("token sub missing")
+	ErrConvertToClaims    = errors.New("cannot convert to map claims")
+	ErrTokenIsBlank       = errors.New("jwt raw is blank")
+	ErrInvalidAudience    = errors.New("invalid audience")
+	ErrInvalidIssuer      = errors.New("invalid issuer")
+	ErrKidNotFound        = errors.New("token header not contain kid")
+	ErrTokenInvalid       = errors.New("token invalid")
 )
 
 // wrapError wraps error by given error and description

@@ -35,7 +35,7 @@ type authZeroValidator struct {
 // New creates a new instance of authZeroValidator using the provided AppConfig configuration.
 // It initializes the necessary components such as logger, issuer, audience, JWKS client, tracer, and mutex.
 func New(cfg config.AppConfig) (Validator, error) {
-	log, err := logger.New(logger.LogConfig{
+	log, err := logger.New(logger.Config{
 		Environment: cfg.Environment,
 	})
 	if err != nil {
@@ -70,7 +70,7 @@ func (v *authZeroValidator) downloadSigningKeys(ctx context.Context) error {
 	// Get JWKs
 	keySet, err := v.jwksClient.getJWKs(ctx)
 	if err != nil {
-		return wrapError(err, "get jwks error")
+		return wrapError(err, "download signing keys")
 	}
 
 	// Parse JWKs to rsa.PublicKey
@@ -89,14 +89,14 @@ func (v *authZeroValidator) downloadSigningKeys(ctx context.Context) error {
 }
 
 // GetSigningKey retrieves a cached signing key based on the provided key ID (kid).
-// If the key is not found, it returns err errPublicKeyNotFound.
+// If the key is not found, it returns err ErrPublicKeyNotFound.
 func (v *authZeroValidator) GetSigningKey(kid string) (*rsa.PublicKey, error) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 
 	key, exists := v.cachedSigningKey[kid]
 	if !exists {
-		return nil, errPublicKeyNotFound
+		return nil, ErrPublicKeyNotFound
 	}
 
 	return key, nil
@@ -122,12 +122,12 @@ func (v *authZeroValidator) DownloadSigningKeysPolling(ctx context.Context) erro
 			)
 
 			if err := v.downloadSigningKeys(ctx); err != nil {
-				log.Error(err, "download singing keys error")
+				log.Errorf(err, "download singing keys error")
 				span.AddEvent("downloadSigningKeys error", trace.WithAttributes(
 					attribute.String("error", err.Error()),
 				))
 			} else {
-				log.Info("download signing keys complete")
+				log.Infof("download signing keys complete")
 				span.AddEvent("downloadSigningKeys finished")
 			}
 
@@ -141,7 +141,7 @@ func (v *authZeroValidator) DownloadSigningKeysPolling(ctx context.Context) erro
 	// Wait for stop process
 	<-ctx.Done()
 
-	log.Info("Stop download signing key")
+	log.Infof("Stop download signing key")
 
 	// Stop ticker
 	ticker.Stop()

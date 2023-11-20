@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/form3tech-oss/jwt-go"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/virsavik/alchemist-template/pkg/logger"
 )
 
 var (
@@ -44,9 +44,8 @@ func (jc jwksClient) getJWKs(ctx context.Context) (jwks, error) {
 		return jwks{}, wrapError(err, "get jwks error")
 	}
 	defer func() {
-		span := trace.SpanFromContext(ctx)
 		if err := resp.Body.Close(); err != nil {
-			span.RecordError(err)
+			logger.FromCtx(ctx).Errorf(err, "response body close")
 		}
 	}()
 
@@ -99,7 +98,7 @@ func (jc jwksClient) parsePublicKeys(ctx context.Context, keySet jwks) (map[stri
 
 	// If at least one signing key doesn't exist we have a problem... Kaboom.
 	if len(publicKeys) == 0 {
-		return nil, errSigningKeySetEmpty
+		return nil, ErrSigningKeySetEmpty
 	}
 
 	return publicKeys, nil

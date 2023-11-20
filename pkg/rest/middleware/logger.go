@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/virsavik/alchemist-template/pkg/logger"
 )
@@ -38,14 +39,20 @@ func Logger(l logger.Logger) func(next http.Handler) http.Handler {
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			defer func() {
 				reqLogger := l.With(
-					logger.WithString("proto", r.Proto),
-					logger.WithString("path", r.URL.Path),
-					logger.WithString("reqId", middleware.GetReqID(r.Context())),
-					logger.WithInt("status", ww.Status()),
-					logger.WithInt("size", ww.BytesWritten()),
+					logger.WithString("host.name", r.Host),
+					logger.WithString("url.path", r.URL.Path),
+					logger.WithString("url.query", r.URL.RawQuery),
+					logger.WithString("http.request.method_original", r.Method),
+					logger.WithInt("http.request.body.size", int(r.ContentLength)),
+					logger.WithString("http.request.proto", r.Proto),
+					logger.WithString("http.request.remote_address", r.RemoteAddr),
+					logger.WithString("user_agent.original", r.UserAgent()),
+					logger.WithInt("http.response.status_code", ww.Status()),
+					logger.WithInt("http.response.body.size", ww.BytesWritten()),
+					logger.WithString("trace.id", trace.SpanFromContext(r.Context()).SpanContext().TraceID().String()),
 				)
 
-				reqLogger.Info("Served")
+				reqLogger.Infof("Served")
 			}()
 
 			next.ServeHTTP(ww, r.WithContext(logger.SetInCtx(r.Context(), l)))

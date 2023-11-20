@@ -7,10 +7,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.opentelemetry.io/otel"
 
 	"github.com/virsavik/alchemist-template/pkg/di"
-	"github.com/virsavik/alchemist-template/pkg/postgresotel"
+	"github.com/virsavik/alchemist-template/pkg/postgres"
 	"github.com/virsavik/alchemist-template/pkg/rest/middleware"
 	"github.com/virsavik/alchemist-template/pkg/system"
 	"github.com/virsavik/alchemist-template/users/internal/constants"
@@ -34,7 +33,7 @@ func Root(ctx context.Context, svc system.Service) (err error) {
 	})
 	container.AddScoped(constants.UsersRepoKey, func(c di.Container) (any, error) {
 		return repository.New(
-			postgresotel.Trace(svc.DB()),
+			postgres.Trace(svc.DB()),
 		), nil
 	})
 
@@ -59,10 +58,10 @@ func Root(ctx context.Context, svc system.Service) (err error) {
 }
 
 func setupChiMiddleware(svc system.Service) {
-	svc.Mux().Use(middleware.RequestID())
+	svc.Mux().Use(middleware.OtelTracer())
 	svc.Mux().Use(middleware.Logger(svc.Logger()))
-	svc.Mux().Use(middleware.Otel(otel.Tracer("handler")))
-	svc.Mux().Use(middleware.Auth(svc.IAMValidator()))
+	svc.Mux().Use(middleware.Authenticator(svc.IAMValidator()))
+	svc.Mux().Use(middleware.Recover(svc.Logger()))
 }
 
 func setupMetricRoute(mux *chi.Mux) {

@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -17,10 +18,18 @@ func SetInCtx(ctx context.Context, l Logger) context.Context {
 func FromCtx(ctx context.Context) Logger {
 	l, ok := ctx.Value(loggerCtxKey).(Logger)
 	if !ok {
-		return logger{
+		return structuredLogger{
 			zap: zap.NewNop(),
 		}
 	}
 
 	return l
+}
+
+func NewCtx(ctx context.Context) context.Context {
+	newCtx := context.Background()
+	// Copy trace span to new ctx
+	trace.ContextWithSpan(newCtx, trace.SpanFromContext(ctx))
+
+	return SetInCtx(newCtx, FromCtx(ctx))
 }

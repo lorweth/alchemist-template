@@ -12,8 +12,9 @@ func convertCtrlErr(err error) error {
 	case controller.ErrEmailAlreadyInUse.Error(),
 		controller.ErrUserDoesNotExist.Error():
 		return respond.Error{
-			Code: http.StatusBadRequest,
-			Desc: err.Error(),
+			StatusCode: http.StatusBadRequest,
+			Name:       "invalid_request",
+			Message:    err.Error(),
 		}
 	default:
 		return err

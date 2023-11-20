@@ -8,12 +8,12 @@ import (
 func GetUserProfile(token *jwt.Token) (UserProfile, error) {
 	mapClaims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return UserProfile{}, errConvertToClaims
+		return UserProfile{}, ErrConvertToClaims
 	}
 
 	id, ok := mapClaims["sub"].(string)
 	if !ok || id == "" {
-		return UserProfile{}, errTokenSubNotFound
+		return UserProfile{}, ErrTokenSubNotFound
 	}
 
 	return UserProfile{

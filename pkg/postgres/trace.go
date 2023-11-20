@@ -1,4 +1,4 @@
-package postgresotel
+package postgres
 
 import (
 	"context"
@@ -9,15 +9,13 @@ import (
 	"github.com/jackc/pgconn"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-
-	"github.com/virsavik/alchemist-template/pkg/postgres"
 )
 
 type tracedDB struct {
-	postgres.ContextExecutor
+	ContextExecutor
 }
 
-func Trace(db postgres.ContextExecutor) postgres.ContextExecutor {
+func Trace(db ContextExecutor) ContextExecutor {
 	return tracedDB{ContextExecutor: db}
 }
 

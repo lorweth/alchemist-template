@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 
@@ -28,12 +27,6 @@ func run() (err error) {
 		return err
 	}
 
-	defer func(db *sql.DB) {
-		if err = db.Close(); err != nil {
-			return
-		}
-	}(s.DB())
-
 	// call the module composition root
 	if err = users.Root(s.Waiter().Context(), s); err != nil {
 		return err
@@ -53,7 +46,7 @@ func run() (err error) {
 	//	for {
 	//		var mem runtime.MemStats
 	//		runtime.ReadMemStats(&mem)
-	//		s.Logger().Info("Alloc = %v, TotalAlloc = %v, Sys = %v, NumGC = %v", mem.Alloc/1024, mem.TotalAlloc/1024, mem.Sys/1024, mem.NumGC)
+	//		s.Logger().Infof("Alloc = %v, TotalAlloc = %v, Sys = %v, NumGC = %v", mem.Alloc/1024, mem.TotalAlloc/1024, mem.Sys/1024, mem.NumGC)
 	//		time.Sleep(10 * time.Second)
 	//	}
 	//}()
