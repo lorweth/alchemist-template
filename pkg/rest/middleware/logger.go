@@ -39,17 +39,17 @@ func Logger(l logger.Logger) func(next http.Handler) http.Handler {
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			defer func() {
 				reqLogger := l.With(
-					logger.WithString("host.name", r.Host),
-					logger.WithString("url.path", r.URL.Path),
-					logger.WithString("url.query", r.URL.RawQuery),
-					logger.WithString("http.request.method_original", r.Method),
-					logger.WithInt("http.request.body.size", int(r.ContentLength)),
-					logger.WithString("http.request.proto", r.Proto),
-					logger.WithString("http.request.remote_address", r.RemoteAddr),
-					logger.WithString("user_agent.original", r.UserAgent()),
-					logger.WithInt("http.response.status_code", ww.Status()),
-					logger.WithInt("http.response.body.size", ww.BytesWritten()),
-					logger.WithString("trace.id", trace.SpanFromContext(r.Context()).SpanContext().TraceID().String()),
+					logger.String("host.name", r.Host),
+					logger.String("url.path", r.URL.Path),
+					logger.String("url.query", r.URL.RawQuery),
+					logger.String("http.request.method_original", r.Method),
+					logger.Int("http.request.body.size", int(r.ContentLength)),
+					logger.String("http.request.proto", r.Proto),
+					logger.String("http.request.remote_address", r.RemoteAddr),
+					logger.String("user_agent.original", r.UserAgent()),
+					logger.Int("http.response.status_code", ww.Status()),
+					logger.Int("http.response.body.size", ww.BytesWritten()),
+					logger.String("trace.id", trace.SpanFromContext(r.Context()).SpanContext().TraceID().String()),
 				)
 
 				reqLogger.Infof("Served")

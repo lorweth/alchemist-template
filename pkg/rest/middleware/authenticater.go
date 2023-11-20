@@ -37,7 +37,7 @@ func Authenticator(iamValidator iam.Validator) func(next http.Handler) http.Hand
 			ctx = iam.SetInCtx(r.Context(), p)
 
 			// Enrich context with user ID for logging purposes
-			ctx = logger.SetInCtx(ctx, log.With(logger.String("user_id", p.ID)))
+			ctx = logger.SetInCtx(ctx, log.With(logger.String("enduser.id", p.ID)))
 
 			// Pass control to the next handler with the enriched context
 			next.ServeHTTP(w, r.WithContext(ctx))
