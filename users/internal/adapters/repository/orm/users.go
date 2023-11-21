@@ -26,7 +26,6 @@ import (
 type User struct {
 	ID        int64     `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Email     string    `boil:"email" json:"email" toml:"email" yaml:"email"`
-	IsActive  bool      `boil:"is_active" json:"is_active" toml:"is_active" yaml:"is_active"`
 	CreatedAt time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	DeletedAt null.Time `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
@@ -38,14 +37,12 @@ type User struct {
 var UserColumns = struct {
 	ID        string
 	Email     string
-	IsActive  string
 	CreatedAt string
 	UpdatedAt string
 	DeletedAt string
 }{
 	ID:        "id",
 	Email:     "email",
-	IsActive:  "is_active",
 	CreatedAt: "created_at",
 	UpdatedAt: "updated_at",
 	DeletedAt: "deleted_at",
@@ -54,14 +51,12 @@ var UserColumns = struct {
 var UserTableColumns = struct {
 	ID        string
 	Email     string
-	IsActive  string
 	CreatedAt string
 	UpdatedAt string
 	DeletedAt string
 }{
 	ID:        "users.id",
 	Email:     "users.email",
-	IsActive:  "users.is_active",
 	CreatedAt: "users.created_at",
 	UpdatedAt: "users.updated_at",
 	DeletedAt: "users.deleted_at",
@@ -119,15 +114,6 @@ func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
 	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
 }
 
-type whereHelperbool struct{ field string }
-
-func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-
 type whereHelpertime_Time struct{ field string }
 
 func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
@@ -176,14 +162,12 @@ func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsN
 var UserWhere = struct {
 	ID        whereHelperint64
 	Email     whereHelperstring
-	IsActive  whereHelperbool
 	CreatedAt whereHelpertime_Time
 	UpdatedAt whereHelpertime_Time
 	DeletedAt whereHelpernull_Time
 }{
 	ID:        whereHelperint64{field: "\"users\".\"id\""},
 	Email:     whereHelperstring{field: "\"users\".\"email\""},
-	IsActive:  whereHelperbool{field: "\"users\".\"is_active\""},
 	CreatedAt: whereHelpertime_Time{field: "\"users\".\"created_at\""},
 	UpdatedAt: whereHelpertime_Time{field: "\"users\".\"updated_at\""},
 	DeletedAt: whereHelpernull_Time{field: "\"users\".\"deleted_at\""},
@@ -206,9 +190,9 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "email", "is_active", "created_at", "updated_at", "deleted_at"}
+	userAllColumns            = []string{"id", "email", "created_at", "updated_at", "deleted_at"}
 	userColumnsWithoutDefault = []string{"id", "email"}
-	userColumnsWithDefault    = []string{"is_active", "created_at", "updated_at", "deleted_at"}
+	userColumnsWithDefault    = []string{"created_at", "updated_at", "deleted_at"}
 	userPrimaryKeyColumns     = []string{"id"}
 	userGeneratedColumns      = []string{}
 )

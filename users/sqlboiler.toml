@@ -1,7 +1,7 @@
 # Refer https://github.com/volatiletech/sqlboiler#configuration
 schema = "public"
 pkgname = "model"
-output = "internal/model"
+output = "internal/adapters/repository/orm"
 wipe = true
 no-tests = true
 no-hooks = true
