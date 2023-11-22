@@ -10,13 +10,13 @@ type Response[T any] struct {
 
 // Error representing expected error from handler
 type Error struct {
-	StatusCode int
-	Name       string
-	Message    string
+	Status  int
+	Key     string
+	Message string
 }
 
 func (e Error) Error() string {
-	return fmt.Sprintf("respond.Error{code:%d,name:%s,msg:%s}", e.StatusCode, e.Name, e.Message)
+	return fmt.Sprintf("respond.Error{status:%d,key:%s,message:%s}", e.Status, e.Key, e.Message)
 }
 
 type Message struct {

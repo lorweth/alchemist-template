@@ -17,9 +17,9 @@ func New[T any](status int, data T) Response[T] {
 
 func FromError(err Error) Response[Message] {
 	return Response[Message]{
-		status: err.StatusCode,
+		status: err.Status,
 		data: Message{
-			Name:    err.Name,
+			Name:    err.Key,
 			Message: err.Message,
 		},
 	}

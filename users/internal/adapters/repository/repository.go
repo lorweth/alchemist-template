@@ -9,9 +9,6 @@ type Repository struct {
 }
 
 func New(db postgres.ContextExecutor) *Repository {
-	// Init id generator
-	initIDGenerator()
-
 	return &Repository{
 		db: db,
 	}
