@@ -42,6 +42,7 @@ func setupRoutes(svc system.Service, hdl v1.UserHandler) {
 		//v1.Use(middleware.Authenticator(svc.IAMValidator()))
 
 		v1.Post("/", hdl.CreateUser())
+		v1.Get("/", hdl.GetUser())
 		v1.Delete("/{id}", hdl.DeleteUser())
 	})
 }

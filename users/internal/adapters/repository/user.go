@@ -27,6 +27,14 @@ func (r Repository) GetAll(ctx context.Context, input ports.GetUserInput) ([]dom
 		qms = append(qms, orm.UserWhere.Email.EQ(input.Email))
 	}
 
+	if !input.CreatedAt.From.IsZero() {
+		qms = append(qms, orm.UserWhere.CreatedAt.GTE(input.CreatedAt.From))
+	}
+
+	if !input.CreatedAt.To.IsZero() {
+		qms = append(qms, orm.UserWhere.CreatedAt.LTE(input.CreatedAt.To))
+	}
+
 	users, err := orm.Users(qms...).All(ctx, r.db)
 	if err != nil {
 		return nil, errors.WithStack(err)

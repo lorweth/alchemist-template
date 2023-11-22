@@ -13,6 +13,7 @@
 // Functions:
 //   - WriteJSON[T]: Writes a JSON response to the provided http.ResponseWriter.
 //   - URLParam[T]: Extracts a URL parameter named 'key' from the given HTTP request and converts it to the specified type T.
+//   - URLQuery[T]: Retrieves a query parameter named 'key' from the given HTTP request.
 //
 // Example usage:
 //

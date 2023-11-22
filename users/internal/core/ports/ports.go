@@ -6,11 +6,6 @@ import (
 	"github.com/virsavik/alchemist-template/users/internal/core/domain"
 )
 
-type GetUserInput struct {
-	ID    int64
-	Email string
-}
-
 type UserRepository interface {
 	GetAll(ctx context.Context, input GetUserInput) ([]domain.User, error)
 

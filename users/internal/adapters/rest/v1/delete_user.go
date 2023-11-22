@@ -12,7 +12,12 @@ func (hdl UserHandler) DeleteUser() http.HandlerFunc {
 		ctx := r.Context()
 
 		// Get user ID from URL
-		userID, _ := httpio.URLParam[int64](r, "id")
+		userID, err := httpio.URLParam[int64](r, "id")
+		if err != nil {
+			return err
+		}
+
+		// Validate user ID
 		if userID == 0 {
 			return errUserIDMustBeGreaterThanZero
 		}

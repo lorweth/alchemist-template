@@ -10,6 +10,7 @@ import (
 var (
 	errEmailCannotBeBlank          = httpio.Error{Status: http.StatusBadRequest, Key: "email_blank", Desc: "Email cannot be blank"}
 	errUserIDMustBeGreaterThanZero = httpio.Error{Status: http.StatusBadRequest, Key: "user_id_zero", Desc: "User id must be greater than zero"}
+	errToTimeCannotBeforeFromTime  = httpio.Error{Status: http.StatusBadRequest, Key: "from_time_cannot_before_to_time", Desc: "From time cannot before to time"}
 )
 
 func convertServiceError(err error) error {
