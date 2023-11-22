@@ -7,7 +7,7 @@ import (
 )
 
 type UserRepository interface {
-	GetAll(ctx context.Context, input GetUserInput) ([]domain.User, error)
+	GetAll(ctx context.Context, input GetUserInput) ([]domain.User, int64, error)
 
 	GetOne(ctx context.Context, input GetUserInput) (domain.User, error)
 
@@ -17,7 +17,7 @@ type UserRepository interface {
 }
 
 type UserService interface {
-	GetAll(ctx context.Context, input GetUserInput) ([]domain.User, error)
+	GetAll(ctx context.Context, input GetUserInput) ([]domain.User, int64, error)
 
 	Create(ctx context.Context, user domain.User) (domain.User, error)
 

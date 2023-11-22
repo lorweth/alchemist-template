@@ -17,13 +17,13 @@ func NewUserService(repo ports.UserRepository) *UserService {
 	}
 }
 
-func (svc UserService) GetAll(ctx context.Context, input ports.GetUserInput) ([]domain.User, error) {
-	users, err := svc.repo.GetAll(ctx, input)
+func (svc UserService) GetAll(ctx context.Context, input ports.GetUserInput) ([]domain.User, int64, error) {
+	users, total, err := svc.repo.GetAll(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return users, nil
+	return users, total, nil
 }
 
 func (svc UserService) Create(ctx context.Context, user domain.User) (domain.User, error) {

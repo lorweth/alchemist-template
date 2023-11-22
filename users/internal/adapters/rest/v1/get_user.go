@@ -9,6 +9,7 @@ import (
 	"github.com/virsavik/alchemist-template/pkg/rest/httpio"
 	"github.com/virsavik/alchemist-template/users/internal/core/domain"
 	"github.com/virsavik/alchemist-template/users/internal/core/ports"
+	"github.com/virsavik/alchemist-template/users/internal/pkg/pagination"
 )
 
 func (hdl UserHandler) GetUser() http.HandlerFunc {
@@ -16,7 +17,7 @@ func (hdl UserHandler) GetUser() http.HandlerFunc {
 		ctx := r.Context()
 
 		// Get query params
-		req, err := httpio.URLQuery[getUserRequest](r, "q")
+		req, err := httpio.URLQuery[getUserRequest](r, "query")
 		if err != nil {
 			return wrapBadRequestError(err, "invalid_request")
 		}
@@ -25,13 +26,14 @@ func (hdl UserHandler) GetUser() http.HandlerFunc {
 			return err
 		}
 
-		// Delete user
-		users, err := hdl.svc.GetAll(ctx, ports.GetUserInput{
+		// Get users
+		users, total, err := hdl.svc.GetAll(ctx, ports.GetUserInput{
 			Email: req.Email,
 			CreatedAt: ports.Period{
 				From: req.CreatedAt.From,
 				To:   req.CreatedAt.To,
 			},
+			Pagination: req.Pagination,
 		})
 		if err != nil {
 			return convertServiceError(err)
@@ -42,6 +44,11 @@ func (hdl UserHandler) GetUser() http.HandlerFunc {
 			Status: http.StatusOK,
 			Body: getUserResponse{
 				Data: users,
+				Meta: queryMeta{
+					Total:       total,
+					CurrentPage: req.Pagination.Page,
+					Size:        req.Pagination.Size,
+				},
 			},
 		})
 
@@ -50,8 +57,9 @@ func (hdl UserHandler) GetUser() http.HandlerFunc {
 }
 
 type getUserRequest struct {
-	Email     string     `json:"email"`
-	CreatedAt periodTime `json:"created_at"`
+	Email      string           `json:"email"`
+	CreatedAt  periodTime       `json:"created_at"`
+	Pagination pagination.Input `json:"pagination"`
 }
 
 func (req getUserRequest) IsValid() error {
@@ -66,11 +74,22 @@ func (req getUserRequest) IsValid() error {
 		return errToTimeCannotBeforeFromTime
 	}
 
+	if err := req.Pagination.IsValid(); err != nil {
+		return wrapBadRequestError(err, "invalid_pagination")
+	}
+
 	return nil
 }
 
 type getUserResponse struct {
 	Data []domain.User `json:"data"`
+	Meta queryMeta     `json:"meta"`
+}
+
+type queryMeta struct {
+	CurrentPage int   `json:"current_page"`
+	Size        int   `json:"size"`
+	Total       int64 `json:"total"`
 }
 
 type periodTime struct {
