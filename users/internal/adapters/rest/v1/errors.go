@@ -3,20 +3,20 @@ package v1
 import (
 	"net/http"
 
-	"github.com/virsavik/alchemist-template/pkg/rest/respond"
+	"github.com/virsavik/alchemist-template/pkg/rest/httpio"
 	"github.com/virsavik/alchemist-template/users/internal/core/services"
 )
 
 var (
-	errEmailCannotBeBlank          = respond.Error{Status: http.StatusBadRequest, Key: "email_blank", Message: "Email cannot be blank"}
-	errUserIDMustBeGreaterThanZero = respond.Error{Status: http.StatusBadRequest, Key: "user_id_zero", Message: "User id must be greater than zero"}
+	errEmailCannotBeBlank          = httpio.Error{Status: http.StatusBadRequest, Key: "email_blank", Desc: "Email cannot be blank"}
+	errUserIDMustBeGreaterThanZero = httpio.Error{Status: http.StatusBadRequest, Key: "user_id_zero", Desc: "User id must be greater than zero"}
 )
 
 func convertServiceError(err error) error {
 	switch err.Error() {
 	case services.EmailHasBeenUsed.Error(),
 		services.UserNotFound.Error():
-		return respond.Error{
+		return httpio.Error{
 			Status: http.StatusBadRequest,
 			Key:    err.Error(),
 		}
@@ -31,9 +31,9 @@ func wrapBadRequestError(err error, name string) error {
 		errName = name
 	}
 
-	return respond.Error{
-		Status:  http.StatusBadRequest,
-		Key:     errName,
-		Message: err.Error(),
+	return httpio.Error{
+		Status: http.StatusBadRequest,
+		Key:    errName,
+		Desc:   err.Error(),
 	}
 }

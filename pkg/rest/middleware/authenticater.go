@@ -7,7 +7,7 @@ import (
 
 	"github.com/virsavik/alchemist-template/pkg/iam"
 	"github.com/virsavik/alchemist-template/pkg/logger"
-	"github.com/virsavik/alchemist-template/pkg/rest/respond"
+	httpio2 "github.com/virsavik/alchemist-template/pkg/rest/httpio"
 )
 
 // Authenticator is a middleware function that handles JWT authentication using Auth0's RS256 and JWKS flow.
@@ -28,7 +28,13 @@ func Authenticator(iamValidator iam.Validator) func(next http.Handler) http.Hand
 			p, err := getUserProfileFromRequest(r, iamValidator)
 			if err != nil {
 				log.Infof("user authenticate error: %v", err)
-				respond.Unauthorized(respond.Message{Name: "invalid_token"}).WriteJSON(ctx, w)
+				httpio2.WriteJSON(w, r, httpio2.Response[httpio2.Message]{
+					Status: http.StatusUnauthorized,
+					Body: httpio2.Message{
+						Key:     "invalid_token",
+						Content: "Invalid token",
+					},
+				})
 
 				return
 			}

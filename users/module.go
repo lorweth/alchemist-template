@@ -35,7 +35,7 @@ func Root(ctx context.Context, svc system.Service) (err error) {
 
 func setupRoutes(svc system.Service, hdl v1.UserHandler) {
 	svc.Mux().Use(middleware.Logger(svc.Logger()))
-	svc.Mux().Use(middleware.Recover(svc.Logger()))
+	svc.Mux().Use(middleware.Recover())
 	svc.Mux().Use(middleware.OtelTracer())
 
 	svc.Mux().Route("/users", func(v1 chi.Router) {

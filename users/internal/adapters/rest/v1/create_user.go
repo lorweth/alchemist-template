@@ -5,18 +5,16 @@ import (
 	"net/mail"
 	"strings"
 
-	"github.com/virsavik/alchemist-template/pkg/rest"
-	"github.com/virsavik/alchemist-template/pkg/rest/request"
-	"github.com/virsavik/alchemist-template/pkg/rest/respond"
+	"github.com/virsavik/alchemist-template/pkg/rest/httpio"
 	"github.com/virsavik/alchemist-template/users/internal/core/domain"
 )
 
 func (hdl UserHandler) CreateUser() http.HandlerFunc {
-	return rest.ErrResponseWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	return httpio.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		ctx := r.Context()
 
 		// Decode request
-		req, err := request.BindJSON[createUserRequest](r.Body)
+		req, err := httpio.BindJSON[createUserRequest](r.Body)
 		if err != nil {
 			return err
 		}
@@ -35,7 +33,10 @@ func (hdl UserHandler) CreateUser() http.HandlerFunc {
 		}
 
 		// Write response
-		respond.Ok(user).WriteJSON(ctx, w)
+		httpio.WriteJSON(w, r, httpio.Response[domain.User]{
+			Status: http.StatusOK,
+			Body:   user,
+		})
 
 		return nil
 	})

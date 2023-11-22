@@ -3,49 +3,36 @@ package v1
 import (
 	"net/http"
 
-	"github.com/virsavik/alchemist-template/pkg/rest"
-	"github.com/virsavik/alchemist-template/pkg/rest/request"
-	"github.com/virsavik/alchemist-template/pkg/rest/respond"
+	"github.com/virsavik/alchemist-template/pkg/rest/httpio"
 	"github.com/virsavik/alchemist-template/users/internal/core/domain"
 )
 
 func (hdl UserHandler) DeleteUser() http.HandlerFunc {
-	return rest.ErrResponseWrapper(func(w http.ResponseWriter, r *http.Request) error {
+	return httpio.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		ctx := r.Context()
 
-		// Decode request
-		req, err := request.BindJSON[deleteUserRequest](r.Body)
-		if err != nil {
-			return err
-		}
-
-		// Validate request
-		if err := req.IsValid(); err != nil {
-			return err
+		// Get user ID from URL
+		userID, _ := httpio.URLParam[int64](r, "id")
+		if userID == 0 {
+			return errUserIDMustBeGreaterThanZero
 		}
 
 		// Delete user
 		if err := hdl.svc.Delete(ctx, domain.User{
-			ID: req.ID,
+			ID: userID,
 		}); err != nil {
 			return convertServiceError(err)
 		}
 
 		// Write response
-		respond.Ok(respond.Message{Name: "delete_success", Message: "Delete user successfully"}).WriteJSON(ctx, w)
+		httpio.WriteJSON(w, r, httpio.Response[httpio.Message]{
+			Status: http.StatusOK,
+			Body: httpio.Message{
+				Key:     "delete_success",
+				Content: "Delete successfully",
+			},
+		})
 
 		return nil
 	})
-}
-
-type deleteUserRequest struct {
-	ID int64
-}
-
-func (req deleteUserRequest) IsValid() error {
-	if req.ID == 0 {
-		return errUserIDMustBeGreaterThanZero
-	}
-
-	return nil
 }
