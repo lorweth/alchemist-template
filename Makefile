@@ -58,3 +58,8 @@ prometheus:
 
 grafana:
 	@${DOCKER_COMPOSE} up -d grafana
+
+# Azurite
+.PHONY: azurite
+azurite:
+	@${DOCKER_COMPOSE} up -d azurite
