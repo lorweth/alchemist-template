@@ -4,18 +4,14 @@ import (
 	"context"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/virsavik/alchemist-template/pkg/di"
 	"github.com/virsavik/alchemist-template/pkg/postgres"
 	"github.com/virsavik/alchemist-template/pkg/rest/middleware"
 	"github.com/virsavik/alchemist-template/pkg/system"
-	"github.com/virsavik/alchemist-template/users/internal/constants"
-	"github.com/virsavik/alchemist-template/users/internal/controller"
-	"github.com/virsavik/alchemist-template/users/internal/repository"
-	"github.com/virsavik/alchemist-template/users/internal/router"
+	"github.com/virsavik/alchemist-template/users/internal/adapters/repository"
+	"github.com/virsavik/alchemist-template/users/internal/adapters/repository/generator"
+	v1 "github.com/virsavik/alchemist-template/users/internal/adapters/rest/v1"
+	"github.com/virsavik/alchemist-template/users/internal/core/services"
 )
 
 type Module struct{}
@@ -25,45 +21,28 @@ func (m Module) Startup(ctx context.Context, mono system.Service) (err error) {
 }
 
 func Root(ctx context.Context, svc system.Service) (err error) {
-	// Init dependency injection container
-	container := di.New()
+	// Init sonyflake id generator
+	generator.InitIDGenerator()
 
-	container.AddScoped(constants.DatabaseTransactionKey, func(c di.Container) (any, error) {
-		return svc.DB().Begin()
-	})
-	container.AddScoped(constants.UsersRepoKey, func(c di.Container) (any, error) {
-		return repository.New(
-			postgres.Trace(svc.DB()),
-		), nil
-	})
+	store := repository.New(postgres.Trace(svc.DB()))
+	userService := services.NewUserService(store)
+	userHandler := v1.NewUserHandler(userService)
 
-	userRegistered := promauto.NewCounter(prometheus.CounterOpts{
-		Name: constants.UsersRegisteredCount,
-	})
-	container.AddScoped(constants.UsersCtrlKey, func(c di.Container) (any, error) {
-		return controller.New(
-			controller.NewUserController(c.Get(constants.UsersRepoKey).(repository.UserRepository)),
-			userRegistered,
-		), nil
-	})
-
-	// setup Driver adapters
-	setupChiMiddleware(svc)
-
-	setupMetricRoute(svc.Mux())
-
-	router.RegisterGateway(container, svc.Mux())
+	setupRoutes(svc, *userHandler)
 
 	return nil
 }
 
-func setupChiMiddleware(svc system.Service) {
-	svc.Mux().Use(middleware.OtelTracer())
+func setupRoutes(svc system.Service, hdl v1.UserHandler) {
 	svc.Mux().Use(middleware.Logger(svc.Logger()))
-	svc.Mux().Use(middleware.Authenticator(svc.IAMValidator()))
-	svc.Mux().Use(middleware.Recover(svc.Logger()))
-}
+	svc.Mux().Use(middleware.Recover())
+	svc.Mux().Use(middleware.OtelTracer())
 
-func setupMetricRoute(mux *chi.Mux) {
-	mux.Method("GET", "/metrics", promhttp.Handler())
+	svc.Mux().Route("/users", func(v1 chi.Router) {
+		//v1.Use(middleware.Authenticator(svc.IAMValidator()))
+
+		v1.Post("/", hdl.CreateUser())
+		v1.Get("/", hdl.GetUser())
+		v1.Delete("/{id}", hdl.DeleteUser())
+	})
 }
