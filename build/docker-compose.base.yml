@@ -74,6 +74,16 @@ services:
     networks:
       - local-network
 
+  azurite:
+    container_name: ${PROJECT_NAME}-azurite
+    platform: linux/arm64
+    hostname: azure-storage
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    volumes:
+      - ./azurite:/data
+    networks:
+      - local-network
+
 networks:
   local-network:
     name: ${PROJECT_NAME}-network
