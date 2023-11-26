@@ -28,7 +28,9 @@
 
 ## References
 
-[Learn how to start using RS256 for signing and verifying your JWTs.](https://auth0.com/blog/navigating-rs256-and-jwks/)
-[Hexagonal Architecture with Go - A Thorough Exploration of Backend Engineering and Distributed System](https://github.com/LordMoMA/Hexagonal-Architecture)
-[Building RESTful API with Hexagonal Architecture in Go](https://dev.to/bagashiz/building-restful-api-with-hexagonal-architecture-in-go-1mij)
-[REST guidelines suggest using a specific HTTP method on a particular type of call made to the server i.e. GET, POST, PUT or DELETE.](https://restfulapi.net/http-methods/)
+- [Learn how to start using RS256 for signing and verifying your JWTs.](https://auth0.com/blog/navigating-rs256-and-jwks/)
+- [Hexagonal Architecture with Go - A Thorough Exploration of Backend Engineering and Distributed System](https://github.com/LordMoMA/Hexagonal-Architecture)
+- [Building RESTful API with Hexagonal Architecture in Go](https://dev.to/bagashiz/building-restful-api-with-hexagonal-architecture-in-go-1mij)
+- [REST guidelines suggest using a specific HTTP method on a particular type of call made to the server i.e. GET, POST, PUT or DELETE.](https://restfulapi.net/http-methods/)
+- [go-jwt-middleware](https://github.com/auth0/go-jwt-middleware)
+- [Add authorization to a Go application.](https://auth0.com/docs/quickstart/backend/golang/interactive)
