@@ -19,7 +19,7 @@ type Service interface {
 	Mux() *chi.Mux
 	Logger() logger.Logger
 	Waiter() waiter.Waiter
-	IAMValidator() iam.Validator
+	AuthProvider() iam.Provider
 }
 
 // Module representing an application module
