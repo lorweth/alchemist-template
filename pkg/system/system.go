@@ -19,6 +19,7 @@ import (
 
 	"github.com/virsavik/alchemist-template/pkg/config"
 	"github.com/virsavik/alchemist-template/pkg/iam"
+	"github.com/virsavik/alchemist-template/pkg/iam/jwks"
 	"github.com/virsavik/alchemist-template/pkg/logger"
 	"github.com/virsavik/alchemist-template/pkg/waiter"
 )
@@ -28,13 +29,13 @@ import (
 // as the central struct that encapsulates these essential elements for managing and
 // controlling the application's behavior.
 type System struct {
-	cfg          config.AppConfig
-	db           *sql.DB
-	mux          *chi.Mux
-	logger       logger.Logger
-	waiter       waiter.Waiter
-	tp           *sdktrace.TracerProvider
-	iamValidator iam.Validator
+	cfg    config.AppConfig
+	db     *sql.DB
+	mux    *chi.Mux
+	logger logger.Logger
+	waiter waiter.Waiter
+	tp     *sdktrace.TracerProvider
+	auth   iam.Provider
 }
 
 func New(cfg config.AppConfig) (*System, error) {
@@ -54,7 +55,7 @@ func New(cfg config.AppConfig) (*System, error) {
 
 	s.initMux()
 
-	if err := s.initIAMValidator(); err != nil {
+	if err := s.initAuthProvider(); err != nil {
 		return nil, err
 	}
 
@@ -163,23 +164,29 @@ func (s *System) initOpenTelemetry() error {
 	return nil
 }
 
-func (s *System) initIAMValidator() error {
+func (s *System) initAuthProvider() error {
 	// Skip initialize iam validator if config not provided
 	if s.cfg.IAM.Tenant == "" || s.cfg.IAM.Audience == "" {
 		return nil
 	}
 
-	var err error
-	s.iamValidator, err = iam.New(s.cfg)
+	provider, err := jwks.NewProvider(s.cfg)
 	if err != nil {
 		return err
 	}
 
+	// Add waiter for download and cache jwks
+	s.waiter.Add(func(ctx context.Context) error {
+		return provider.RefreshLoop(ctx)
+	})
+
+	s.auth = provider
+
 	return nil
 }
 
-func (s *System) IAMValidator() iam.Validator {
-	return s.iamValidator
+func (s *System) AuthProvider() iam.Provider {
+	return s.auth
 }
 
 func (s *System) initWaiter() {
@@ -217,8 +224,4 @@ func (s *System) WaitForWeb(ctx context.Context) error {
 	})
 
 	return group.Wait()
-}
-
-func (s *System) WaitForValidator(ctx context.Context) error {
-	return s.IAMValidator().DownloadSigningKeysPolling(ctx)
 }

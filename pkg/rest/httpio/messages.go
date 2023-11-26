@@ -1,5 +1,5 @@
 package httpio
 
 var (
-	MsgInternalServerError = Message{Key: "internal_server_error", Content: "Internal server error"}
+	MsgInternalServerError = Message{Code: "internal_server_error", Desc: "Internal server error"}
 )

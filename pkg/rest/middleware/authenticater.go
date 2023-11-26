@@ -6,8 +6,9 @@ import (
 	"strings"
 
 	"github.com/virsavik/alchemist-template/pkg/iam"
+	"github.com/virsavik/alchemist-template/pkg/iam/validator"
 	"github.com/virsavik/alchemist-template/pkg/logger"
-	httpio2 "github.com/virsavik/alchemist-template/pkg/rest/httpio"
+	"github.com/virsavik/alchemist-template/pkg/rest/httpio"
 )
 
 // Authenticator is a middleware function that handles JWT authentication using Auth0's RS256 and JWKS flow.
@@ -19,20 +20,20 @@ import (
 // extracted from the authenticated token.
 //
 // For more information on the RS256 and JWKS flow, refer to: https://auth0.com/blog/navigating-rs256-and-jwks/#Verifying-a-JWT-using-the-JWKS-endpoint
-func Authenticator(iamValidator iam.Validator) func(next http.Handler) http.Handler {
+func Authenticator(validator validator.Validator) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			log := logger.FromCtx(ctx)
 
-			p, err := getUserProfileFromRequest(r, iamValidator)
+			p, err := getUserProfileFromRequest(r, validator)
 			if err != nil {
 				log.Infof("user authenticate error: %v", err)
-				httpio2.WriteJSON(w, r, httpio2.Response[httpio2.Message]{
+				httpio.WriteJSON(w, r, httpio.Response[httpio.Message]{
 					Status: http.StatusUnauthorized,
-					Body: httpio2.Message{
-						Key:     "invalid_token",
-						Content: "Invalid token",
+					Body: httpio.Message{
+						Code: "invalid_token",
+						Desc: err.Error(),
 					},
 				})
 
@@ -55,7 +56,7 @@ func Authenticator(iamValidator iam.Validator) func(next http.Handler) http.Hand
 
 // getUserProfileFromRequest extracts the JWT token from the request's authorization header,
 // validates it, and returns the user profile associated with the token.
-func getUserProfileFromRequest(r *http.Request, iamValidator iam.Validator) (iam.UserProfile, error) {
+func getUserProfileFromRequest(r *http.Request, validator validator.Validator) (iam.UserProfile, error) {
 	// Extract the JWT from the request's authorization header.
 	tokenRaw, err := getFromAuthHeader(r)
 	if err != nil {
@@ -64,7 +65,7 @@ func getUserProfileFromRequest(r *http.Request, iamValidator iam.Validator) (iam
 
 	// Let secure process the request. If it returns an error,
 	// that indicates the request should not continue.
-	parsedToken, err := iam.ParseJWT(iamValidator, tokenRaw)
+	parsedToken, err := validator.ValidateToken(r.Context(), tokenRaw)
 	if err != nil {
 		return iam.UserProfile{}, err
 	}

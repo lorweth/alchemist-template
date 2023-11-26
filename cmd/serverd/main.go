@@ -54,7 +54,6 @@ func run() error {
 
 	m.Waiter().Add(
 		m.WaitForWeb,
-		m.WaitForValidator,
 	)
 
 	//go func() {

@@ -23,8 +23,8 @@ func HandlerFunc(fn func(w http.ResponseWriter, r *http.Request) error) http.Han
 				WriteJSON(w, r, Response[Message]{
 					Status: apiErr.Status,
 					Body: Message{
-						Key:     apiErr.Key,
-						Content: apiErr.Desc,
+						Code: apiErr.Code,
+						Desc: apiErr.Desc,
 					},
 				})
 

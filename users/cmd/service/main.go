@@ -37,7 +37,6 @@ func run() (err error) {
 
 	s.Waiter().Add(
 		s.WaitForWeb,
-		s.WaitForValidator,
 		//s.WaitForRPC,
 		//s.WaitForStream,
 	)

@@ -33,8 +33,8 @@ func (hdl UserHandler) DeleteUser() http.HandlerFunc {
 		httpio.WriteJSON(w, r, httpio.Response[httpio.Message]{
 			Status: http.StatusOK,
 			Body: httpio.Message{
-				Key:     "delete_success",
-				Content: "Delete successfully",
+				Code: "delete_success",
+				Desc: "Delete successfully",
 			},
 		})
 

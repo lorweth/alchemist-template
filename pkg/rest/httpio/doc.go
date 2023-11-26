@@ -18,8 +18,8 @@
 // Example usage:
 //
 //	// Construct a custom error and respond with a JSON representation of the error.
-//	customError := respond.Error{Status: 400, Key: "invalid_input", Desc: "Invalid input provided"}
-//	response := respond.Response[Message]{Status: customError.Status, Body: respond.Message{Key: customError.Key}}
+//	customError := respond.Error{Status: 400, Code: "invalid_input", Desc: "Invalid input provided"}
+//	response := respond.Response[Message]{Status: customError.Status, Body: respond.Message{Code: customError.Code}}
 //	respond.WriteJSON(w, r, response)
 //
 // Note: This package assumes the use of the chi router for URL parameter extraction.
