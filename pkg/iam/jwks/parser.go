@@ -10,6 +10,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/pkg/errors"
+
 	"github.com/virsavik/alchemist-template/pkg/iam/oidc"
 	"github.com/virsavik/alchemist-template/pkg/logger"
 )
@@ -38,7 +39,7 @@ func NewProvider(tenant string, audience string, opts ...Option) (*CacheProvider
 
 	p := &CacheProvider{
 		issuer:          issuer,
-		jwksURI:         oidc.GetJWKSURI(issuer),
+		jwksURI:         oidc.GetJwksURI(issuer),
 		audience:        audience,
 		refreshInterval: defaultRefreshInterval,
 		client:          http.Client{Timeout: defaultRequestTimeout},

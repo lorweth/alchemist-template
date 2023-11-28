@@ -15,7 +15,7 @@ func GetIssuerFromTenant(tenant string) (url.URL, error) {
 	return *issuer, nil
 }
 
-// GetJWKSURI gets the jwks uri from issuer.
-func GetJWKSURI(issuer url.URL) url.URL {
+// GetJwksURI gets the jwks uri from issuer.
+func GetJwksURI(issuer url.URL) url.URL {
 	return *issuer.JoinPath(".well-known/jwks.json")
 }

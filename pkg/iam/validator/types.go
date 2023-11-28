@@ -13,3 +13,7 @@ type Validator interface {
 type Parser interface {
 	Parse(tokenRaw string) (jwt.Token, error)
 }
+
+type Claims interface {
+	TokenBuilder() *jwt.Builder
+}
