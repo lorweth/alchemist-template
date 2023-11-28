@@ -1,11 +1,10 @@
 package middleware
 
 import (
-	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/virsavik/alchemist-template/pkg/iam"
+	"github.com/virsavik/alchemist-template/pkg/iam/extractor"
 	"github.com/virsavik/alchemist-template/pkg/iam/validator"
 	"github.com/virsavik/alchemist-template/pkg/logger"
 	"github.com/virsavik/alchemist-template/pkg/rest/httpio"
@@ -29,11 +28,13 @@ func Authenticator(validator validator.Validator) func(next http.Handler) http.H
 			p, err := getUserProfileFromRequest(r, validator)
 			if err != nil {
 				log.Infof("user authenticate error: %v", err)
+
+				vErr := convertValidatorError(err)
 				httpio.WriteJSON(w, r, httpio.Response[httpio.Message]{
-					Status: http.StatusUnauthorized,
+					Status: vErr.Status,
 					Body: httpio.Message{
-						Code: "invalid_token",
-						Desc: err.Error(),
+						Code: vErr.Code,
+						Desc: vErr.Desc,
 					},
 				})
 
@@ -58,7 +59,7 @@ func Authenticator(validator validator.Validator) func(next http.Handler) http.H
 // validates it, and returns the user profile associated with the token.
 func getUserProfileFromRequest(r *http.Request, validator validator.Validator) (iam.UserProfile, error) {
 	// Extract the JWT from the request's authorization header.
-	tokenRaw, err := getFromAuthHeader(r)
+	tokenRaw, err := extractor.AuthHeader(r)
 	if err != nil {
 		return iam.UserProfile{}, err
 	}
@@ -78,19 +79,23 @@ func getUserProfileFromRequest(r *http.Request, validator validator.Validator) (
 	return p, nil
 }
 
-// getFromAuthHeader is a "TokenExtractor" that takes a give request and extracts
-// the JWT token from the Authorization header.
-func getFromAuthHeader(r *http.Request) (string, error) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return "", nil // No error, just no token
-	}
+var (
+	ErrUnauthorized = httpio.Error{Status: http.StatusUnauthorized, Code: "unauthorized", Desc: "token in unauthorized"}
+	ErrExpired      = httpio.Error{Status: http.StatusUnauthorized, Code: "token_expired", Desc: "token is expired"}
+	ErrNBFInvalid   = httpio.Error{Status: http.StatusUnauthorized, Code: "nbf_invalid", Desc: "token nbf validation failed"}
+	ErrIATInvalid   = httpio.Error{Status: http.StatusUnauthorized, Code: "iat_invalid", Desc: "token iat validation failed"}
+)
 
-	// TODO: Make this a bit more robust, parsing-wise
-	authHeaderParts := strings.Fields(authHeader)
-	if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
-		return "", errors.New("authorization header format must be bearer {token}")
+// convertValidatorError will normalize the error message from the underlining
+func convertValidatorError(err error) httpio.Error {
+	switch err.Error() {
+	case validator.ErrExpired.Error():
+		return ErrExpired
+	case validator.ErrIATInvalid.Error():
+		return ErrIATInvalid
+	case validator.ErrNBFInvalid.Error():
+		return ErrNBFInvalid
+	default:
+		return ErrUnauthorized
 	}
-
-	return authHeaderParts[1], nil
 }

@@ -1,13 +1,13 @@
 package jwks
 
-import "net/http"
+import (
+	"github.com/virsavik/alchemist-template/pkg/logger"
+)
 
-// ProviderOption is how options for the CacheProvider are set up.
-type ProviderOption func(*CacheProvider)
+type Option func(provider *CacheProvider)
 
-// WithCustomClient will set a custom *http.Client on the *CacheProvider
-func WithCustomClient(c *http.Client) ProviderOption {
-	return func(p *CacheProvider) {
-		p.client = c
+func WithLogger(log logger.Logger) Option {
+	return func(provider *CacheProvider) {
+		provider.logger = log
 	}
 }

@@ -47,6 +47,11 @@ func URLQuery[T any](r *http.Request, key string) (T, error) {
 		v.SetBool(boolV)
 
 	case reflect.Struct:
+		// Empty query
+		if len(qVal) == 0 {
+			return rs, nil
+		}
+
 		if err := json.Unmarshal([]byte(qVal), &rs); err != nil {
 			return rs, pkgerrors.WithStack(err)
 		}

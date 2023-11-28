@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/virsavik/alchemist-template/pkg/tracing"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -18,8 +19,8 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/virsavik/alchemist-template/pkg/config"
-	"github.com/virsavik/alchemist-template/pkg/iam"
 	"github.com/virsavik/alchemist-template/pkg/iam/jwks"
+	"github.com/virsavik/alchemist-template/pkg/iam/validator"
 	"github.com/virsavik/alchemist-template/pkg/logger"
 	"github.com/virsavik/alchemist-template/pkg/waiter"
 )
@@ -29,13 +30,13 @@ import (
 // as the central struct that encapsulates these essential elements for managing and
 // controlling the application's behavior.
 type System struct {
-	cfg    config.AppConfig
-	db     *sql.DB
-	mux    *chi.Mux
-	logger logger.Logger
-	waiter waiter.Waiter
-	tp     *sdktrace.TracerProvider
-	auth   iam.Provider
+	cfg       config.AppConfig
+	db        *sql.DB
+	mux       *chi.Mux
+	logger    logger.Logger
+	waiter    waiter.Waiter
+	tp        *sdktrace.TracerProvider
+	validator validator.Validator
 }
 
 func New(cfg config.AppConfig) (*System, error) {
@@ -47,15 +48,15 @@ func New(cfg config.AppConfig) (*System, error) {
 		return nil, err
 	}
 
-	if err := s.initOpenTelemetry(); err != nil {
-		return nil, err
-	}
-
 	s.initLogger()
 
 	s.initMux()
 
-	if err := s.initAuthProvider(); err != nil {
+	if err := s.initValidator(); err != nil {
+		return nil, err
+	}
+
+	if err := s.initOpenTelemetry(); err != nil {
 		return nil, err
 	}
 
@@ -155,6 +156,11 @@ func (s *System) initOpenTelemetry() error {
 		propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}),
 	)
 
+	// set logger to tracer
+	if s.logger != nil {
+		otel.SetErrorHandler(tracing.NewErrorHandler(s.Logger()))
+	}
+
 	s.waiter.Cleanup(func() {
 		if err := s.tp.Shutdown(context.Background()); err != nil {
 			s.logger.Errorf(err, "ran into an issue shutting down the tracer provider")
@@ -164,29 +170,33 @@ func (s *System) initOpenTelemetry() error {
 	return nil
 }
 
-func (s *System) initAuthProvider() error {
+func (s *System) initValidator() error {
 	// Skip initialize iam validator if config not provided
 	if s.cfg.IAM.Tenant == "" || s.cfg.IAM.Audience == "" {
 		return nil
 	}
 
-	provider, err := jwks.NewProvider(s.cfg)
+	if s.logger == nil {
+		return errors.New("logger must be initialize first")
+	}
+
+	parser, err := jwks.NewProvider(s.cfg.IAM.Tenant, s.cfg.IAM.Audience, jwks.WithLogger(s.Logger()))
 	if err != nil {
 		return err
 	}
 
-	// Add waiter for download and cache jwks
-	s.waiter.Add(func(ctx context.Context) error {
-		return provider.RefreshLoop(ctx)
-	})
+	s.validator = validator.New(parser)
 
-	s.auth = provider
+	// Add waiter for fetch jwks in goroutine
+	s.Waiter().Add(func(ctx context.Context) error {
+		return parser.FetchLoop(ctx)
+	})
 
 	return nil
 }
 
-func (s *System) AuthProvider() iam.Provider {
-	return s.auth
+func (s *System) Validator() validator.Validator {
+	return s.validator
 }
 
 func (s *System) initWaiter() {

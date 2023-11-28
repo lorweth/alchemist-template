@@ -25,14 +25,7 @@ func (pagination Input) IsValid() error {
 
 func ToOffsetLimit(pagination Input) (int, int) {
 	limit := pagination.Size
-	if limit == 0 {
-		limit = defaultLimit
-	}
-
 	offset := limit * (pagination.Page - 1)
-	if offset < 0 {
-		offset = defaultOffset
-	}
 
 	return offset, limit
 }

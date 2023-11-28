@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/virsavik/alchemist-template/pkg/config"
-	"github.com/virsavik/alchemist-template/pkg/iam"
+	"github.com/virsavik/alchemist-template/pkg/iam/validator"
 	"github.com/virsavik/alchemist-template/pkg/logger"
 	"github.com/virsavik/alchemist-template/pkg/waiter"
 )
@@ -19,7 +19,7 @@ type Service interface {
 	Mux() *chi.Mux
 	Logger() logger.Logger
 	Waiter() waiter.Waiter
-	AuthProvider() iam.Provider
+	Validator() validator.Validator
 }
 
 // Module representing an application module

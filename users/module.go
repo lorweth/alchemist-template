@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/virsavik/alchemist-template/pkg/iam/validator"
 	"github.com/virsavik/alchemist-template/pkg/postgres"
 	"github.com/virsavik/alchemist-template/pkg/rest/middleware"
 	"github.com/virsavik/alchemist-template/pkg/system"
@@ -40,7 +39,7 @@ func setupRoutes(svc system.Service, hdl v1.UserHandler) {
 	svc.Mux().Use(middleware.OtelTracer())
 
 	svc.Mux().Route("/users", func(v1 chi.Router) {
-		v1.Use(middleware.Authenticator(validator.New(svc.AuthProvider())))
+		v1.Use(middleware.Authenticator(svc.Validator()))
 
 		v1.Post("/", hdl.CreateUser())
 		v1.Get("/", hdl.GetUser())
