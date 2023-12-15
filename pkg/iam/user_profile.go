@@ -4,6 +4,10 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
+type UserProfile struct {
+	ID string
+}
+
 // GetUserProfile returns UserProfile by given token
 func GetUserProfile(token jwt.Token) (UserProfile, error) {
 	sub, ok := token.Get("sub")
